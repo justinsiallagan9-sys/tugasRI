@@ -17,70 +17,66 @@ kehadiran = st.sidebar.slider("Persentase Kehadiran (%)", 0, 100, 80)
 # --- PROSES MATEMATIKA ---
 
 # 1. KONSEP MATRIKS (Perhitungan Nilai Akhir)
-# Bobot: Tugas 20%, UTS 30%, UAS 50%
+# Menggunakan Vektor Nilai dan Vektor Bobot
 bobot = np.array([0.2, 0.3, 0.5])
 nilai_input = np.array([tugas, uts, uas])
 nilai_akhir = np.dot(nilai_input, bobot)
 
-# 2. KONSEP BOOLEAN (3 Variabel + Penyederhanaan)
-# A: Tugas >= 60, B: UTS >= 60, C: Kehadiran >= 75
+# 2. KONSEP BOOLEAN (3 Variabel: A=Tugas, B=UTS, C=Presensi)
+# Syarat: Tugas >= 60 (A), UTS >= 60 (B), Kehadiran >= 75 (C)
 A = 1 if tugas >= 60 else 0
 B = 1 if uts >= 60 else 0
 C = 1 if kehadiran >= 75 else 0
-# Fungsi Boolean awal: (A*B*C) + (A*B*non C) + (non A*B*C) -> disederhanakan menjadi: B*(A + C)
-status_boolean = B and (A or C)
+# Fungsi Boolean: B AND (A OR C) -> Hasil penyederhanaan K-Map
+status_boolean = bool(B and (A or C))
 
-# 3. KONSEP LOGIKA (Aturan Kompleks)
-status_lulus = "GAGAL"
+# 3. KONSEP LOGIKA (Aturan Keputusan Kompleks)
 if kehadiran < 75:
-status_lulus = "GAGAL (Kehadiran Kurang)"
+status_lulus = "GAGAL (Kehadiran di bawah 75%)"
+warna_status = "red"
 elif nilai_akhir >= 60 and status_boolean:
 status_lulus = "LULUS"
+warna_status = "green"
 else:
-status_lulus = "GAGAL (Kriteria Nilai Tidak Terpenuhi)"
+status_lulus = "GAGAL (Nilai atau Syarat Boolean tidak terpenuhi)"
+warna_status = "red"
 
 # 4. KONSEP HIMPUNAN
-set_akademik = set()
-if tugas >= 60: set_akademik.add("Tugas Oke")
-if uts >= 60: set_akademik.add("UTS Oke")
-if uas >= 60: set_akademik.add("UAS Oke")
+set_mahasiswa = set()
+if tugas >= 60: set_mahasiswa.add("Lulus Tugas")
+if uts >= 60: set_mahasiswa.add("Lulus UTS")
+if uas >= 60: set_mahasiswa.add("Lulus UAS")
+set_syarat_minimal = {"Lulus Tugas", "Lulus UTS"}
+hasil_himpunan = set_mahasiswa.intersection(set_syarat_minimal)
 
-set_syarat = {"Tugas Oke", "UTS Oke", "UAS Oke"}
-irisan = set_akademik.intersection(set_syarat)
-
-# 5. KONSEP SPL (Target Nilai)
-# Mencari UAS yang dibutuhkan jika ingin Nilai Akhir = 60
-# Persamaan: 0.2*Tugas + 0.3*UTS + 0.5*UAS = 60
-target_uas = (60 - (0.2 * tugas) - (0.3 * uts)) / 0.5
+# 5. KONSEP SPL (Sistem Persamaan Linear)
+# Target Nilai Akhir = 60. Persamaan: 0.2*Tugas + 0.3*UTS + 0.5*UAS_diperlukan = 60
+uas_diperlukan = (60 - (0.2 * tugas) - (0.3 * uts)) / 0.5
 
 # --- TAMPILAN DASHBOARD ---
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([2, 1])
 
 with col1:
-st.subheader("📊 Hasil Prediksi")
-color = "green" if "LULUS" in status_lulus else "red"
-st.markdown(f"### Status: :{color}[{status_lulus}]")
-st.metric("Total Nilai Akhir", f"{nilai_akhir:.2f}/100")
+st.subheader(f"📊 Analisis untuk: {nama}")
+st.markdown(f"### Status: :{warna_status}[{status_lulus}]")
 
-st.subheader("🛠 Analisis Matematika")
-with st.expander("Lihat Detail Konsep"):
-st.write("**1. Matriks:** Nilai dihitung dengan perkalian dot antara vektor input dan matriks bobot.")
-st.code(f"[{tugas}, {uts}, {uas}] . [0.2, 0.3, 0.5] = {nilai_akhir}")
-
-st.write("**2. Boolean:** Fungsi disederhanakan dari f(A,B,C) menjadi `UTS & (Tugas | Kehadiran)`.")
-st.write(f"Hasil Evaluasi: `{bool(B)} & ({bool(A)} | {bool(C)})` = **{bool(status_boolean)}**")
-
-st.write("**3. Himpunan:** Irisan antara pencapaianmu dan syarat ideal.")
-st.write(f"Komponen terpenuhi: {irisan}")
+st.write("#### 🛠 Transparansi Konsep Matematika")
+exp1 = st.expander("Klik untuk melihat detail 5 Konsep Matematika")
+with exp1:
+st.write(f"**1. Matriks:** `[Tugas, UTS, UAS] . Bobot` = `{nilai_input} . {bobot} = {nilai_akhir:.2f}`")
+st.write(f"**2. Boolean:** `B ∧ (A ∨ C)` = `{bool(B)} ∧ ({bool(A)} ∨ {bool(C)})` = **{status_boolean}**")
+st.write(f"**3. Logika:** Menggunakan aturan Bertingkat (Nested If) untuk Kehadiran dan Nilai Akhir.")
+st.write(f"**4. Himpunan:** Kamu memenuhi {len(hasil_himpunan)} dari {len(set_syarat_minimal)} syarat wajib awal.")
+st.write(f"**5. SPL:** Menghitung variabel UAS yang belum diketahui untuk mencapai target 60.")
 
 with col2:
-st.subheader("💡 Fitur 'Target Saya' (SPL)")
+st.subheader("💡 Info Target")
 if nilai_akhir < 60:
-st.info(f"Untuk mencapai kelulusan (nilai 60), kamu minimal membutuhkan nilai UAS sebesar **{max(0, target_uas):.2f}**")
+st.warning(f"Butuh UAS: **{max(0, uas_diperlukan):.2f}**")
 else:
-st.success("Nilai kamu sudah mencapai ambang batas kelulusan!")
+st.success("Target nilai 60 sudah tercapai!")
 
-st.subheader("📈 Probabilitas")
-prob = (nilai_akhir * 0.7) + (kehadiran * 0.3)
-st.progress(int(prob))
-st.write(f"Estimasi kemantapan posisi: {prob:.1f}%")
+st.subheader("📉 Kemantapan")
+probabilitas = min(100, int((nilai_akhir * 0.7) + (kehadiran * 0.3)))
+st.progress(probabilitas)
+st.write(f"Tingkat Keyakinan: {probabilitas}%")
