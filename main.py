@@ -79,3 +79,58 @@ def hitung_matriks_dan_spl(tugas_rutin, cbr, cjr, rekayasa_ide, mini_riset, proj
     return nilai_agregat, (target_tugas, target_uts, target_uas)
 
 # Parameter ini akan dipanggil oleh modul utama nanti
+
+def komputasi_lanjutan(kehadiran, tugas_array, nilai_uts, nilai_uas, nilai_agregat):
+    """
+    Modul Komputasi 2: Boolean, Himpunan, dan Logika Keputusan
+    """
+    # 3. BOOLEAN (Fungsi 3 Variabel)
+    # A: Kehadiran >= 75
+    # B: Minimal 3 tugas dikerjakan (Total nilai biner >= 300)
+    # C: UAS >= 50
+    A = kehadiran >= 75.0
+    B = sum(tugas_array) >= 300.0
+    C = nilai_uas >= 50.0
+    
+    kelayakan_dasar = (A and B) or C
+    
+    # 4. HIMPUNAN (Operasi Selisih)
+    himpunan_standar = {"Kehadiran", "Tugas", "UTS", "UAS"}
+    himpunan_mahasiswa = set()
+    
+    if kehadiran >= 75.0: 
+        himpunan_mahasiswa.add("Kehadiran")
+    if sum(tugas_array) >= 300.0: 
+        himpunan_mahasiswa.add("Tugas")
+    if nilai_uts >= 70.0: 
+        himpunan_mahasiswa.add("UTS")
+    if nilai_uas >= 70.0: 
+        himpunan_mahasiswa.add("UAS")
+        
+    komponen_evaluasi = himpunan_standar.difference(himpunan_mahasiswa)
+    
+    # 5. LOGIKA (Aturan Keputusan Kompleks)
+    # Kalkulasi probabilitas dasar berbasis nilai agregat (Batas ideal = 70.0)
+    probabilitas = (nilai_agregat / 70.0) * 100.0
+    if probabilitas > 100.0: 
+        probabilitas = 100.0
+        
+    status = ""
+    rekomendasi = ""
+    
+    # Percabangan bersarang
+    if nilai_agregat >= 70.0 and kelayakan_dasar:
+        status = "LULUS"
+        if len(komponen_evaluasi) == 0:
+            rekomendasi = "Kinerja sangat baik dan memenuhi standar di semua komponen. Pertahankan."
+        else:
+            rekomendasi = f"Lulus bersyarat. Meskipun agregat cukup, perbaiki komponen berikut: {', '.join(komponen_evaluasi)}."
+    elif nilai_agregat >= 50.0 and kelayakan_dasar:
+        status = "TIDAK LULUS (DAPAT MENGULANG UJIAN)"
+        rekomendasi = f"Nilai marginal. Wajib evaluasi pada komponen: {', '.join(komponen_evaluasi)}."
+    else:
+        status = "TIDAK LULUS"
+        probabilitas = probabilitas * 0.5 # Penalti fatal
+        rekomendasi = f"Tidak memenuhi standar minimal kelulusan. Wajib mengulang kelas. Titik lemah utama: {', '.join(komponen_evaluasi)}."
+        
+    return status, probabilitas, rekomendasi, komponen_evaluasi
