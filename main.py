@@ -31,7 +31,7 @@ C = 1 if kehadiran >= 75 else 0
 status_boolean = bool(B and (A or C))
 
 # 3. KONSEP LOGIKA (Aturan Keputusan Kompleks)
-if kehadiran < 75:
+if kehadiran <= 75:
 status_lulus = "GAGAL (Kehadiran di bawah 75%)"
 warna_status = "red"
 elif nilai_akhir >= 60 and status_boolean:
