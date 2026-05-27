@@ -16,7 +16,7 @@ st.markdown("""
     .stButton>button { width: 100%; border-radius: 10px; height: 3em; background-color: #005088; color: white; }
     .result-card { padding: 20px; border-radius: 15px; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
-    """, unsafe_allow_name_with_ Harris=True)
+    """, unsafe_allow_html=True) Harris=True)
 
 st.title("🎓 PentaLogic Classifier")
 st.subheader("Sistem Prediksi Kelulusan Berbasis 5 Konsep Matematika Diskrit")
