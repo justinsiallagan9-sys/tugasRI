@@ -1,118 +1,133 @@
 import streamlit as st
+import numpy as np
 import math
 
-# Konfigurasi Halaman sesuai Judul Rekayasa Ide [cite: 1, 4]
-st.set_page_config(page_title="Smart Password Analyzer", page_icon="🔐", layout="wide")
+# --- KONFIGURASI HALAMAN ---
+st.set_page_config(
+    page_title="PentaLogic - Prediksi Kelulusan",
+    page_icon="🎓",
+    layout="centered"
+)
 
-st.title("Aplikasi Smart Password Analyzer")
-st.caption("Implementasi Rekayasa Ide Kelompok 3 PTIK-B - Universitas Negeri Medan [cite: 11, 15]")
+# --- CSS CUSTOM UNTUK TAMPILAN ---
+st.markdown("""
+    <style>
+    .main { background-color: #f8fafc; }
+    .stButton>button { width: 100%; border-radius: 10px; height: 3em; background-color: #005088; color: white; }
+    .result-card { padding: 20px; border-radius: 15px; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+    """, unsafe_allow_name_with_ Harris=True)
 
-# Sidebar untuk Navigasi sesuai rencana penelitian [cite: 199]
-menu = st.sidebar.selectbox("Pilih Modul:", ["Kalkulator Kombinatorik", "Analisis Keamanan Password"])
+st.title("🎓 PentaLogic Classifier")
+st.subheader("Sistem Prediksi Kelulusan Berbasis 5 Konsep Matematika Diskrit")
+st.write("Sistem ini mengevaluasi kelayakan lulus menggunakan alur logika matematika murni.")
 
-# --- MODUL 1: KALKULATOR KOMBINATORIK (Media Pembelajaran) [cite: 163, 200] ---
-if menu == "Kalkulator Kombinatorik":
-    st.header("1. Kalkulator Kombinatorik")
-    st.write("Modul ini membantu mahasiswa memahami perhitungan dasar faktorial, permutasi, dan kombinasi[cite: 171, 201].")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.subheader("Faktorial (n!)")
-        n_fact = st.number_input("Masukkan n:", min_value=0, step=1, key="fact")
-        if st.button("Hitung Faktorial"):
-            st.success(f"{n_fact}! = {math.factorial(n_fact)}")
-
-    with col2:
-        st.subheader("Permutasi (P)")
-        n_p = st.number_input("Masukkan n:", min_value=0, step=1, key="np")
-        r_p = st.number_input("Masukkan r:", min_value=0, step=1, key="rp")
-        if st.button("Hitung Permutasi"):
-            if n_p >= r_p:
-                hasil_p = math.perm(n_p, r_p)
-                st.success(f"P({n_p}, {r_p}) = {hasil_p}")
-            else:
-                st.error("n harus ≥ r")
-
-    with col3:
-        st.subheader("Kombinasi (C)")
-        n_c = st.number_input("Masukkan n:", min_value=0, step=1, key="nc")
-        r_c = st.number_input("Masukkan r:", min_value=0, step=1, key="rc")
-        if st.button("Hitung Kombinasi"):
-            if n_c >= r_c:
-                hasil_c = math.comb(n_c, r_c)
-                st.success(f"C({n_c}, {r_c}) = {hasil_c}")
-            else:
-                st.error("n harus ≥ r")
-
-# --- MODUL 2: ANALISIS KEAMANAN PASSWORD (Penerapan Kontekstual) [cite: 66, 202] ---
-else:
-    st.header("2. Analisis Keamanan Password")
-    st.write("Menganalisis tingkat kerumitan berdasarkan teori kombinatorik[cite: 137, 202].")
-
-    # Input password dari responden penelitian [cite: 203]
-    user_password = st.text_input("Masukkan kata sandi untuk dianalisis:", type="password")
-
-    if user_password:
-        # LOGIKA PENGECEKAN KARAKTER (Menentukan n) [cite: 147, 215]
-        n = 0
-        k = len(user_password) # Panjang password (k) [cite: 148, 215]
-        
-        # Pengecekan isi password satu per satu
-        has_lower = any(c.islower() for c in user_password)
-        has_upper = any(c.isupper() for c in user_password)
-        has_digit = any(c.isdigit() for c in user_password)
-        has_special = any(not c.isalnum() for c in user_password)
-
-        # Menentukan variasi karakter (n) [cite: 147, 215]
-        if has_lower: n += 26
-        if has_upper: n += 26
-        if has_digit: n += 10
-        if has_special: n += 32
-
-        # MODEL MATEMATIKA REKAYASA IDE [cite: 209]
-        # 1. Total Kombinasi C = n^k [cite: 144, 213]
-        total_kombinasi = n ** k
-        
-        # 2. Faktor Prediktabilitas (P) [cite: 218, 220]
-        p_factor = 1.0
-        kata_umum = ["password", "12345678", "admin123", "unimed2026", "ptikunimed"]
-        if user_password.lower() in kata_umum:
-            p_factor = 1000.0 # Password umum meningkatkan prediktabilitas 
-        
-        # 3. Estimasi Waktu T = C / (R * alpha) [cite: 150, 223]
-        R = 10**9 # Kecepatan tebakan per detik (R) [cite: 221]
-        alpha = 1.0 # Koefisien efisiensi (alpha) [cite: 222]
-        waktu_detik = total_kombinasi / (R * alpha * p_factor)
-
-        # OUTPUT VISUALISASI [cite: 207, 246]
-        st.divider()
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Variasi Karakter (n)", n)
-        c2.metric("Panjang (k)", k)
-        c3.metric("Prediktabilitas (P)", p_factor)
-
-        st.subheader("Total Kombinasi Matematis ($C = n^k$):")
-        st.code(f"{total_kombinasi:,}")
-
-        # Konversi Waktu [cite: 205]
-        if waktu_detik > 31536000:
-            hasil_waktu = f"{waktu_detik/31536000:,.2f} Tahun"
-        elif waktu_detik > 86400:
-            hasil_waktu = f"{waktu_detik/86400:,.2f} Hari"
-        else:
-            hasil_waktu = f"{waktu_detik:,.2f} Detik"
-
-        st.subheader("Estimasi Waktu Serangan Brute Force[cite: 204]:")
-        st.info(f"Dibutuhkan sekitar **{hasil_waktu}** untuk meretas password ini.")
-
-        # Kesimpulan & Rekomendasi [cite: 207, 241]
-        if k < 12:
-            st.warning("Password terlalu pendek. Gunakan minimal 12 karakter[cite: 161].")
-        elif n < 60:
-            st.warning("Kurang variasi. Gunakan campuran huruf besar, angka, dan simbol[cite: 49].")
-        else:
-            st.success("Password ini memiliki tingkat keamanan yang tinggi secara matematis[cite: 157].")
+# --- SIDEBAR INPUT DATA ---
+st.sidebar.header("📊 Data Mahasiswa")
+nama = st.sidebar.text_input("Nama Mahasiswa", "Budi Santoso")
+kehadiran = st.sidebar.slider("Persentase Kehadiran (%)", 0, 100, 85)
+sks_total = st.sidebar.number_input("Total SKS yang Ditempuh", 0, 150, 130)
+ada_nilai_e = st.sidebar.radio("Apakah ada nilai E?", ("Tidak", "Ya"))
 
 st.sidebar.divider()
-st.sidebar.caption("Modul ini digunakan untuk penelitian Mixed Method Kelompok 3[cite: 229, 230].")
+ipk = st.sidebar.number_input("IPK Saat Ini", 0.0, 4.0, 3.4, step=0.1)
+toefl = st.sidebar.number_input("Skor TOEFL", 0, 677, 480)
+
+st.sidebar.divider()
+st.sidebar.write("📝 **Nilai Mata Kuliah Inti (0-100):**")
+n_algo = st.sidebar.number_input("Algoritma", 0, 100, 80)
+n_db = st.sidebar.number_input("Basis Data", 0, 100, 75)
+n_rpl = st.sidebar.number_input("RPL", 0, 100, 85)
+
+# --- TOMBOL PREDIKSI ---
+if st.button("Analisis Kelulusan Sekarang"):
+    
+    st.divider()
+    
+    # ==========================================
+    # KONSEP 1: BOOLEAN (3 Variabel & Penyederhanaan)
+    # ==========================================
+    # A = Kehadiran cukup, B = SKS cukup, C = Tidak ada nilai E
+    A = kehadiran >= 80
+    B = sks_total >= 120
+    C = ada_nilai_e == "Tidak"
+    
+    # Fungsi Boolean: F(A,B,C) = A ∧ B ∧ C
+    lulus_boolean = A and B and C
+    
+    with st.expander("🔍 Detail Tahap 1: Evaluasi Boolean"):
+        st.latex(r"F(A,B,C) = A \land B \land C")
+        st.write(f"Kehadiran (A): {'✅' if A else '❌'}")
+        st.write(f"Minimal SKS (B): {'✅' if B else '❌'}")
+        st.write(f"Bebas Nilai E (C): {'✅' if C else '❌'}")
+
+    if not lulus_boolean:
+        st.error(f"**Hasil: TIDAK LULUS SYARAT DASAR**")
+        st.warning("Mahasiswa gagal pada penyederhanaan fungsi Boolean syarat administratif.")
+    else:
+        # ==========================================
+        # KONSEP 2: HIMPUNAN (Operasi Irisan / Intersection)
+        # ==========================================
+        mk_wajib = {"Algoritma", "Basis Data", "RPL"}
+        # Asumsi mahasiswa menginput nilai maka dianggap sudah ambil
+        mk_diambil = {"Algoritma", "Basis Data", "RPL"} 
+        
+        irisan = mk_wajib.intersection(mk_diambil)
+        lulus_himpunan = irisan == mk_wajib
+        
+        with st.expander("🔍 Detail Tahap 2: Operasi Himpunan"):
+            st.latex(r"MK_{Lulus} = MK_{Wajib} \cap MK_{Ambil}")
+            st.write(f"Himpunan MK Wajib: `{mk_wajib}`")
+            st.write(f"Mahasiswa memenuhi: `{irisan}`")
+
+        # ==========================================
+        # KONSEP 3: MATRIKS (Operasi Perkalian Bobot)
+        # ==========================================
+        # Matriks Nilai (1x3) dan Matriks Bobot SKS (3x1)
+        m_nilai = np.array([n_algo, n_db, n_rpl])
+        m_bobot = np.array([[3], [4], [3]]) # Bobot SKS
+        
+        # Perkalian Matriks
+        total_poin = np.dot(m_nilai, m_bobot)[0]
+        standar_poin = 700 # Batas poin lulus
+        
+        with st.expander("🔍 Detail Tahap 3: Operasi Matriks"):
+            st.latex(r"\begin{bmatrix} n_1 & n_2 & n_3 \end{bmatrix} \cdot \begin{bmatrix} s_1 \\ s_2 \\ s_3 \end{bmatrix} = \text{Total Poin}")
+            st.write(f"Hasil Kalkulasi Matriks: **{total_poin} Poin**")
+
+        # ==========================================
+        # KONSEP 4: LOGIKA (Aturan Keputusan Kompleks)
+        # ==========================================
+        if (ipk >= 3.5) and (toefl >= 500):
+            kategori = "LULUS (CUMLAUDE)"
+            warna = "success"
+        elif (ipk >= 2.75) and (toefl >= 450):
+            kategori = "LULUS (SANGAT MEMUASKAN)"
+            warna = "info"
+        else:
+            kategori = "TIDAK LULUS (LOGIKA AKADEMIK)"
+            warna = "error"
+
+        # ==========================================
+        # KONSEP 5: KOMBINATORIKA (Pemilihan Optimal)
+        # ==========================================
+        # Menghitung sisa cara mengambil MK Pilihan (Misal 5 tersedia, butuh 2)
+        n_pilihan = 5
+        r_butuh = 2
+        kombinasi = math.comb(n_pilihan, r_butuh)
+
+        # --- TAMPILAN AKHIR ---
+        st.subheader("🏁 Kesimpulan Akhir")
+        if warna == "success":
+            st.balloons()
+            st.success(f"**{nama} diprediksi: {kategori}**")
+        elif warna == "info":
+            st.info(f"**{nama} diprediksi: {kategori}**")
+        else:
+            st.error(f"**{nama} diprediksi: {kategori}**")
+            
+        st.write(f"**Analisis Kombinatorika:** Mahasiswa memiliki **{kombinasi} cara** untuk memilih mata kuliah pilihan sisa guna mengoptimalkan nilai.")
+
+# --- FOOTER ---
+st.divider()
+st.caption("Aplikasi ini menggunakan konsep Matematika Diskrit: Boolean, Himpunan, Matriks, Logika Proposisional, dan Kombinatorika.")
