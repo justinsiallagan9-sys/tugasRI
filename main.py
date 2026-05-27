@@ -1,133 +1,86 @@
 import streamlit as st
 import numpy as np
-import math
 
-# --- KONFIGURASI HALAMAN ---
-st.set_page_config(
-    page_title="PentaLogic - Prediksi Kelulusan",
-    page_icon="🎓",
-    layout="centered"
-)
+# Judul Aplikasi
+st.set_page_config(page_title="Prediksi Kelulusan Mata Kuliah", layout="wide")
+st.title("🎓 App Prediksi Kelulusan (Matematika Terapan)")
+st.markdown("---")
 
-# --- CSS CUSTOM UNTUK TAMPILAN ---
-st.markdown("""
-    <style>
-    .main { background-color: #f8fafc; }
-    .stButton>button { width: 100%; border-radius: 10px; height: 3em; background-color: #005088; color: white; }
-    .result-card { padding: 20px; border-radius: 15px; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    </style>
-   """, unsafe_allow_html=True)
+# --- SIDEBAR: INPUT DATA ---
+st.sidebar.header("📥 Input Data Mahasiswa")
+nama = st.sidebar.text_input("Nama Mahasiswa", "Budi")
+tugas = st.sidebar.slider("Nilai Tugas", 0, 100, 70)
+uts = st.sidebar.slider("Nilai UTS", 0, 100, 65)
+uas = st.sidebar.slider("Nilai UAS", 0, 100, 50)
+kehadiran = st.sidebar.slider("Persentase Kehadiran (%)", 0, 100, 80)
 
-st.title("🎓 PentaLogic Classifier")
-st.subheader("Sistem Prediksi Kelulusan Berbasis 5 Konsep Matematika Diskrit")
-st.write("Sistem ini mengevaluasi kelayakan lulus menggunakan alur logika matematika murni.")
+# --- PROSES MATEMATIKA ---
 
-# --- SIDEBAR INPUT DATA ---
-st.sidebar.header("📊 Data Mahasiswa")
-nama = st.sidebar.text_input("Nama Mahasiswa", "Budi Santoso")
-kehadiran = st.sidebar.slider("Persentase Kehadiran (%)", 0, 100, 85)
-sks_total = st.sidebar.number_input("Total SKS yang Ditempuh", 0, 150, 130)
-ada_nilai_e = st.sidebar.radio("Apakah ada nilai E?", ("Tidak", "Ya"))
+# 1. KONSEP MATRIKS (Perhitungan Nilai Akhir)
+# Bobot: Tugas 20%, UTS 30%, UAS 50%
+bobot = np.array([0.2, 0.3, 0.5])
+nilai_input = np.array([tugas, uts, uas])
+nilai_akhir = np.dot(nilai_input, bobot)
 
-st.sidebar.divider()
-ipk = st.sidebar.number_input("IPK Saat Ini", 0.0, 4.0, 3.4, step=0.1)
-toefl = st.sidebar.number_input("Skor TOEFL", 0, 677, 480)
+# 2. KONSEP BOOLEAN (3 Variabel + Penyederhanaan)
+# A: Tugas >= 60, B: UTS >= 60, C: Kehadiran >= 75
+A = 1 if tugas >= 60 else 0
+B = 1 if uts >= 60 else 0
+C = 1 if kehadiran >= 75 else 0
+# Fungsi Boolean awal: (A*B*C) + (A*B*non C) + (non A*B*C) -> disederhanakan menjadi: B*(A + C)
+status_boolean = B and (A or C)
 
-st.sidebar.divider()
-st.sidebar.write("📝 **Nilai Mata Kuliah Inti (0-100):**")
-n_algo = st.sidebar.number_input("Algoritma", 0, 100, 80)
-n_db = st.sidebar.number_input("Basis Data", 0, 100, 75)
-n_rpl = st.sidebar.number_input("RPL", 0, 100, 85)
+# 3. KONSEP LOGIKA (Aturan Kompleks)
+status_lulus = "GAGAL"
+if kehadiran < 75:
+status_lulus = "GAGAL (Kehadiran Kurang)"
+elif nilai_akhir >= 60 and status_boolean:
+status_lulus = "LULUS"
+else:
+status_lulus = "GAGAL (Kriteria Nilai Tidak Terpenuhi)"
 
-# --- TOMBOL PREDIKSI ---
-if st.button("Analisis Kelulusan Sekarang"):
-    
-    st.divider()
-    
-    # ==========================================
-    # KONSEP 1: BOOLEAN (3 Variabel & Penyederhanaan)
-    # ==========================================
-    # A = Kehadiran cukup, B = SKS cukup, C = Tidak ada nilai E
-    A = kehadiran >= 80
-    B = sks_total >= 120
-    C = ada_nilai_e == "Tidak"
-    
-    # Fungsi Boolean: F(A,B,C) = A ∧ B ∧ C
-    lulus_boolean = A and B and C
-    
-    with st.expander("🔍 Detail Tahap 1: Evaluasi Boolean"):
-        st.latex(r"F(A,B,C) = A \land B \land C")
-        st.write(f"Kehadiran (A): {'✅' if A else '❌'}")
-        st.write(f"Minimal SKS (B): {'✅' if B else '❌'}")
-        st.write(f"Bebas Nilai E (C): {'✅' if C else '❌'}")
+# 4. KONSEP HIMPUNAN
+set_akademik = set()
+if tugas >= 60: set_akademik.add("Tugas Oke")
+if uts >= 60: set_akademik.add("UTS Oke")
+if uas >= 60: set_akademik.add("UAS Oke")
 
-    if not lulus_boolean:
-        st.error(f"**Hasil: TIDAK LULUS SYARAT DASAR**")
-        st.warning("Mahasiswa gagal pada penyederhanaan fungsi Boolean syarat administratif.")
-    else:
-        # ==========================================
-        # KONSEP 2: HIMPUNAN (Operasi Irisan / Intersection)
-        # ==========================================
-        mk_wajib = {"Algoritma", "Basis Data", "RPL"}
-        # Asumsi mahasiswa menginput nilai maka dianggap sudah ambil
-        mk_diambil = {"Algoritma", "Basis Data", "RPL"} 
-        
-        irisan = mk_wajib.intersection(mk_diambil)
-        lulus_himpunan = irisan == mk_wajib
-        
-        with st.expander("🔍 Detail Tahap 2: Operasi Himpunan"):
-            st.latex(r"MK_{Lulus} = MK_{Wajib} \cap MK_{Ambil}")
-            st.write(f"Himpunan MK Wajib: `{mk_wajib}`")
-            st.write(f"Mahasiswa memenuhi: `{irisan}`")
+set_syarat = {"Tugas Oke", "UTS Oke", "UAS Oke"}
+irisan = set_akademik.intersection(set_syarat)
 
-        # ==========================================
-        # KONSEP 3: MATRIKS (Operasi Perkalian Bobot)
-        # ==========================================
-        # Matriks Nilai (1x3) dan Matriks Bobot SKS (3x1)
-        m_nilai = np.array([n_algo, n_db, n_rpl])
-        m_bobot = np.array([[3], [4], [3]]) # Bobot SKS
-        
-        # Perkalian Matriks
-        total_poin = np.dot(m_nilai, m_bobot)[0]
-        standar_poin = 700 # Batas poin lulus
-        
-        with st.expander("🔍 Detail Tahap 3: Operasi Matriks"):
-            st.latex(r"\begin{bmatrix} n_1 & n_2 & n_3 \end{bmatrix} \cdot \begin{bmatrix} s_1 \\ s_2 \\ s_3 \end{bmatrix} = \text{Total Poin}")
-            st.write(f"Hasil Kalkulasi Matriks: **{total_poin} Poin**")
+# 5. KONSEP SPL (Target Nilai)
+# Mencari UAS yang dibutuhkan jika ingin Nilai Akhir = 60
+# Persamaan: 0.2*Tugas + 0.3*UTS + 0.5*UAS = 60
+target_uas = (60 - (0.2 * tugas) - (0.3 * uts)) / 0.5
 
-        # ==========================================
-        # KONSEP 4: LOGIKA (Aturan Keputusan Kompleks)
-        # ==========================================
-        if (ipk >= 3.5) and (toefl >= 500):
-            kategori = "LULUS (CUMLAUDE)"
-            warna = "success"
-        elif (ipk >= 2.75) and (toefl >= 450):
-            kategori = "LULUS (SANGAT MEMUASKAN)"
-            warna = "info"
-        else:
-            kategori = "TIDAK LULUS (LOGIKA AKADEMIK)"
-            warna = "error"
+# --- TAMPILAN DASHBOARD ---
+col1, col2 = st.columns(2)
 
-        # ==========================================
-        # KONSEP 5: KOMBINATORIKA (Pemilihan Optimal)
-        # ==========================================
-        # Menghitung sisa cara mengambil MK Pilihan (Misal 5 tersedia, butuh 2)
-        n_pilihan = 5
-        r_butuh = 2
-        kombinasi = math.comb(n_pilihan, r_butuh)
+with col1:
+st.subheader("📊 Hasil Prediksi")
+color = "green" if "LULUS" in status_lulus else "red"
+st.markdown(f"### Status: :{color}[{status_lulus}]")
+st.metric("Total Nilai Akhir", f"{nilai_akhir:.2f}/100")
 
-        # --- TAMPILAN AKHIR ---
-        st.subheader("🏁 Kesimpulan Akhir")
-        if warna == "success":
-            st.balloons()
-            st.success(f"**{nama} diprediksi: {kategori}**")
-        elif warna == "info":
-            st.info(f"**{nama} diprediksi: {kategori}**")
-        else:
-            st.error(f"**{nama} diprediksi: {kategori}**")
-            
-        st.write(f"**Analisis Kombinatorika:** Mahasiswa memiliki **{kombinasi} cara** untuk memilih mata kuliah pilihan sisa guna mengoptimalkan nilai.")
+st.subheader("🛠 Analisis Matematika")
+with st.expander("Lihat Detail Konsep"):
+st.write("**1. Matriks:** Nilai dihitung dengan perkalian dot antara vektor input dan matriks bobot.")
+st.code(f"[{tugas}, {uts}, {uas}] . [0.2, 0.3, 0.5] = {nilai_akhir}")
 
-# --- FOOTER ---
-st.divider()
-st.caption("Aplikasi ini menggunakan konsep Matematika Diskrit: Boolean, Himpunan, Matriks, Logika Proposisional, dan Kombinatorika.")
+st.write("**2. Boolean:** Fungsi disederhanakan dari f(A,B,C) menjadi `UTS & (Tugas | Kehadiran)`.")
+st.write(f"Hasil Evaluasi: `{bool(B)} & ({bool(A)} | {bool(C)})` = **{bool(status_boolean)}**")
+
+st.write("**3. Himpunan:** Irisan antara pencapaianmu dan syarat ideal.")
+st.write(f"Komponen terpenuhi: {irisan}")
+
+with col2:
+st.subheader("💡 Fitur 'Target Saya' (SPL)")
+if nilai_akhir < 60:
+st.info(f"Untuk mencapai kelulusan (nilai 60), kamu minimal membutuhkan nilai UAS sebesar **{max(0, target_uas):.2f}**")
+else:
+st.success("Nilai kamu sudah mencapai ambang batas kelulusan!")
+
+st.subheader("📈 Probabilitas")
+prob = (nilai_akhir * 0.7) + (kehadiran * 0.3)
+st.progress(int(prob))
+st.write(f"Estimasi kemantapan posisi: {prob:.1f}%")
