@@ -1,12 +1,11 @@
 import streamlit as st
 import numpy as np
 
+# --- MODUL 1: ANTARMUKA PENGGUNA ---
 def build_ui():
-    """Modul Antarmuka Pengguna Streamlit Berbasis Status Pengerjaan Tugas KKNI"""
+    st.set_page_config(page_title="Prediksi Kelulusan", layout="wide")
     st.title("Sistem Prediksi Kelulusan & Evaluasi Akademik (Standar KKNI)")
     st.markdown("---")
-    
-    st.header("Parameter Input Nilai & Status Mahasiswa")
     
     col1, col2 = st.columns(2)
     
@@ -15,7 +14,6 @@ def build_ui():
         st.caption("Centang jika tugas dikerjakan (Bobot Total Tugas: 50%)")
         kehadiran = st.number_input("Kehadiran (%)", min_value=0.0, max_value=100.0, value=0.0, step=5.0)
         
-        # Input Biner menggunakan Checkbox
         tugas_rutin = st.checkbox("Tugas Rutin (Dikerjakan)", value=False)
         cbr = st.checkbox("Critical Book Report / CBR (Dikerjakan)", value=False)
         cjr = st.checkbox("Critical Journal Review / CJR (Dikerjakan)", value=False)
@@ -30,95 +28,52 @@ def build_ui():
         nilai_uas = st.number_input("Nilai UAS (0-100)", min_value=0.0, max_value=100.0, value=0.0, step=1.0)
         
     st.markdown("---")
-    submitted = st.button("Proses Prediksi dan Evaluasi", type="primary")
+    submitted = st.button("Proses Prediksi dan Evaluasi", type="primary", use_container_width=True)
     
     return kehadiran, tugas_rutin, cbr, cjr, rekayasa_ide, mini_riset, projek, nilai_uts, nilai_uas, submitted
 
-# Blok eksekusi sementara
-if __name__ == "__main__":
-    inputs = build_ui()
-    if inputs[-1]: 
-        st.warning("Menunggu integrasi modul komputasi matematika (Matriks & SPL)...")
-        
+# --- MODUL 2: MATRIKS & SPL ---
 def hitung_matriks_dan_spl(tugas_rutin, cbr, cjr, rekayasa_ide, mini_riset, projek, nilai_uts, nilai_uas):
-    """
-    Modul Komputasi 1: Matriks (Agregasi Nilai) & SPL (Target Rekomendasi)
-    """
-    # 1. KONVERSI BINER & OPERASI MATRIKS
-    # Konversi boolean ke float (100.0 atau 0.0)
     tugas_array = [float(tugas_rutin)*100, float(cbr)*100, float(cjr)*100, 
                    float(rekayasa_ide)*100, float(mini_riset)*100, float(projek)*100]
     
-    # Matriks Input (1x8)
     M = np.array([*tugas_array, nilai_uts, nilai_uas])
-    
-    # Matriks Bobot (8x1)
-    # 6 tugas @ 8.333% (0.08333), UTS 25% (0.25), UAS 25% (0.25)
     bobot_tugas = (0.50 / 6)
     W = np.array([bobot_tugas, bobot_tugas, bobot_tugas, bobot_tugas, bobot_tugas, bobot_tugas, 0.25, 0.25])
     
-    # Perkalian Matriks (Dot Product)
     nilai_agregat = np.dot(M, W)
     
-    # 2. SISTEM PERSAMAAN LINEAR (SPL)
-    # Mencari nilai ideal x (Tugas), y (UTS), z (UAS) untuk mencapai nilai 70
-    A = np.array([
-        [0.5, 0.25, 0.25], 
-        [1.0, -1.0, 0.0],   
-        [0.0, 1.0, -1.0]    
-    ])
+    A = np.array([[0.5, 0.25, 0.25], [1.0, -1.0, 0.0], [0.0, 1.0, -1.0]])
     B = np.array([70.0, 10.0, -5.0])
     
-    # Penyelesaian SPL dengan numpy.linalg.solve
     try:
         solusi_spl = np.linalg.solve(A, B)
         target_tugas, target_uts, target_uas = solusi_spl[0], solusi_spl[1], solusi_spl[2]
     except np.linalg.LinAlgError:
-        target_tugas, target_uts, target_uas = 70.0, 70.0, 70.0 # Fallback jika matriks singular
+        target_tugas, target_uts, target_uas = 70.0, 70.0, 70.0
         
-    return nilai_agregat, (target_tugas, target_uts, target_uas)
+    return nilai_agregat, (target_tugas, target_uts, target_uas), tugas_array
 
-# Parameter ini akan dipanggil oleh modul utama nanti
-
+# --- MODUL 3: BOOLEAN, HIMPUNAN & LOGIKA ---
 def komputasi_lanjutan(kehadiran, tugas_array, nilai_uts, nilai_uas, nilai_agregat):
-    """
-    Modul Komputasi 2: Boolean, Himpunan, dan Logika Keputusan
-    """
-    # 3. BOOLEAN (Fungsi 3 Variabel)
-    # A: Kehadiran >= 75
-    # B: Minimal 3 tugas dikerjakan (Total nilai biner >= 300)
-    # C: UAS >= 50
     A = kehadiran >= 75.0
     B = sum(tugas_array) >= 300.0
     C = nilai_uas >= 50.0
-    
     kelayakan_dasar = (A and B) or C
     
-    # 4. HIMPUNAN (Operasi Selisih)
     himpunan_standar = {"Kehadiran", "Tugas", "UTS", "UAS"}
     himpunan_mahasiswa = set()
     
-    if kehadiran >= 75.0: 
-        himpunan_mahasiswa.add("Kehadiran")
-    if sum(tugas_array) >= 300.0: 
-        himpunan_mahasiswa.add("Tugas")
-    if nilai_uts >= 70.0: 
-        himpunan_mahasiswa.add("UTS")
-    if nilai_uas >= 70.0: 
-        himpunan_mahasiswa.add("UAS")
+    if kehadiran >= 75.0: himpunan_mahasiswa.add("Kehadiran")
+    if sum(tugas_array) >= 300.0: himpunan_mahasiswa.add("Tugas")
+    if nilai_uts >= 70.0: himpunan_mahasiswa.add("UTS")
+    if nilai_uas >= 70.0: himpunan_mahasiswa.add("UAS")
         
     komponen_evaluasi = himpunan_standar.difference(himpunan_mahasiswa)
     
-    # 5. LOGIKA (Aturan Keputusan Kompleks)
-    # Kalkulasi probabilitas dasar berbasis nilai agregat (Batas ideal = 70.0)
     probabilitas = (nilai_agregat / 70.0) * 100.0
-    if probabilitas > 100.0: 
-        probabilitas = 100.0
+    if probabilitas > 100.0: probabilitas = 100.0
         
-    status = ""
-    rekomendasi = ""
-    
-    # Percabangan bersarang
     if nilai_agregat >= 70.0 and kelayakan_dasar:
         status = "LULUS"
         if len(komponen_evaluasi) == 0:
@@ -130,7 +85,33 @@ def komputasi_lanjutan(kehadiran, tugas_array, nilai_uts, nilai_uas, nilai_agreg
         rekomendasi = f"Nilai marginal. Wajib evaluasi pada komponen: {', '.join(komponen_evaluasi)}."
     else:
         status = "TIDAK LULUS"
-        probabilitas = probabilitas * 0.5 # Penalti fatal
+        probabilitas = probabilitas * 0.5
         rekomendasi = f"Tidak memenuhi standar minimal kelulusan. Wajib mengulang kelas. Titik lemah utama: {', '.join(komponen_evaluasi)}."
         
-    return status, probabilitas, rekomendasi, komponen_evaluasi
+    return status, probabilitas, rekomendasi
+
+# --- MODUL UTAMA ---
+if __name__ == "__main__":
+    inputs = build_ui()
+    kehadiran = inputs[0]
+    tugas_inputs = inputs[1:7]
+    nilai_uts = inputs[7]
+    nilai_uas = inputs[8]
+    submitted = inputs[9]
+    
+    if submitted:
+        st.header("Hasil Analisis")
+        
+        nilai_agregat, target_spl, tugas_array = hitung_matriks_dan_spl(*tugas_inputs, nilai_uts, nilai_uas)
+        status, probabilitas, rekomendasi = komputasi_lanjutan(kehadiran, tugas_array, nilai_uts, nilai_uas, nilai_agregat)
+        
+        col_res1, col_res2, col_res3 = st.columns(3)
+        col_res1.metric("Nilai Agregat (Matriks)", f"{nilai_agregat:.2f}")
+        col_res2.metric("Probabilitas Lulus", f"{probabilitas:.1f}%")
+        col_res3.metric("Status Akhir", status)
+        
+        if "TIDAK LULUS" in status:
+            st.error(f"**Rekomendasi Evaluasi:** {rekomendasi}")
+            st.info(f"**Analisis SPL (Target Ideal agar Lulus):** Rata-rata Tugas: {target_spl[0]:.1f}, UTS: {target_spl[1]:.1f}, UAS: {target_spl[2]:.1f}")
+        else:
+            st.success(f"**Rekomendasi Evaluasi:** {rekomendasi}")
